@@ -1,0 +1,8 @@
+
+variable1 = "Hola script!";
+
+variable2 = "Segunda string.";
+
+variable3 = 4 + 5 * 3;
+
+
