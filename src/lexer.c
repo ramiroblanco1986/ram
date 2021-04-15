@@ -41,7 +41,6 @@ int ram_lexer(FILE* file_desc)
 			}
 			printf("String: %s\n", lexer_buff);
 			free(lexer_buff);
-			continue;
 		}
         }
 	while (ch != EOF);
