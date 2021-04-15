@@ -19,15 +19,29 @@ int ram_lexer(FILE* file_desc)
 			continue;
 		}
 
-		if(is_str(ch))
+		if(is_idn(ch))
 		{
 			lexer_buff = malloc(sizeof(char)*MAX_IDN_LEN);
+			lexer_buff[0] = '\0';
+			do
+			{
+				strncat(lexer_buff, &ch, 1);
+				ch = fgetc(file_desc);
+			}
+			while (is_idn(ch));
+			printf("Identificador: %s\n", lexer_buff);
+			free(lexer_buff);
+			continue;
+		}
+
+		if(is_str(ch))
+		{
+			lexer_buff = malloc(sizeof(char)*MAX_STR_LEN);
 			lexer_buff[0] = '\0';
 			while((ch = fgetc(file_desc)) != EOF && !is_str(ch))
 			{
 				strncat(lexer_buff, &ch, 1);
 				//TOKEN.value.is_str
-				//
 			}
 			printf("String: %s\n", lexer_buff);
 			free(lexer_buff);
@@ -41,10 +55,14 @@ int ram_lexer(FILE* file_desc)
 
 int is_idn(char ch)
 {
-	if(
-	(ch > 96 && ch < 123) || 
-	(ch > 64 && ch < 91) ||
-	ch == '_') return 1;
+	int i = 0;
+	char* identifiers = DEF_IDENTIFIERS;
+	int idn_len = strlen(identifiers);
+	for(;i<idn_len;i++) {
+		if(identifiers[i] == ch) { return 1;
+		 printf("_____ %c\n",identifiers[i]);
+		}
+	}
 	return 0;
 }
 
@@ -58,9 +76,9 @@ int is_str(char ch)
 
 int is_opr(char ch)
 {
-	char operators = DEF_OPERATORS;
+	int i = 0;
+	char* operators = DEF_OPERATORS;
 	int ope_len = strlen(operators);
-	for(int i=0;i<ope_len;i++) {
-	}
+	for(;i<ope_len;i++) if(operators[i] == ch) return 1;
 	return 0;
 }

@@ -5,4 +5,6 @@
 #endif
 
 #define MAX_IDN_LEN 100
-#define DEF_OPERATORS "+-*/%"
+#define MAX_STR_LEN 5000
+#define DEF_OPERATORS "<>!+-*/%="
+#define DEF_IDENTIFIERS "abcdefghijklmnopkrstuvwxyzABCDEFGHIJKLMNOPKRSTUVWXYZ0123456789"
