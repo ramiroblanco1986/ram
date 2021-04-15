@@ -16,10 +16,8 @@ int ram_lexer(FILE* file_desc)
 		if(is_opr(ch))
 		{
 			printf("Operator: %c\n", ch);
-			continue;
 		}
-
-		if(is_idn(ch))
+		else if(is_idn(ch))
 		{
 			lexer_buff = malloc(sizeof(char)*MAX_IDN_LEN);
 			lexer_buff[0] = '\0';
@@ -31,10 +29,8 @@ int ram_lexer(FILE* file_desc)
 			while (is_idn(ch));
 			printf("Identificador: %s\n", lexer_buff);
 			free(lexer_buff);
-			continue;
 		}
-
-		if(is_str(ch))
+		else if(is_str(ch))
 		{
 			lexer_buff = malloc(sizeof(char)*MAX_STR_LEN);
 			lexer_buff[0] = '\0';
