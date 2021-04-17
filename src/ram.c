@@ -3,6 +3,7 @@
 
 int main()
 {
+
 	printf("RAM 1.0\n");
 
 	FILE* file_desc;

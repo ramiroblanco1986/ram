@@ -1,11 +1,15 @@
-#ifndef LEXER_H
+#ifndef _LEXER_H_
 
-#define LEXER_H 
+#define _LEXER_H_
+
+#define MAX_IDN_LEN 100
+#define MAX_STR_LEN 5000
+#define DEF_OPERATORS "<>!+-*/%="
+#define DEF_IDENTIFIERS "abcdefghijklmnopkrstuvwxyzABCDEFGHIJKLMNOPKRSTUVWXYZ0123456789"
 
 typedef enum
 {
 	STR,
-	EQL,
 	LPR,
 	RPR,
 	IDN,
@@ -14,8 +18,6 @@ typedef enum
 	RCB,
 	SCN
 } TOKEN_TYPE;
-
-const char* token_types_list[] = { "STR", "EQL", "LPR", "RPR", "IDN", "OPR", "LCB", "RCB", "SCN" };
 
 typedef struct
 {
@@ -43,4 +45,5 @@ int tokens_push(TOKEN** tokens, TOKEN* token);
 void tokens_print(TOKEN** tokens);
 void tokens_free(TOKEN** tokens);
 
-#endif
+#endif //_LEXER_H_
+

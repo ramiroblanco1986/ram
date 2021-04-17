@@ -1,0 +1,7 @@
+variable = "example test";
+
+variable2 = 2 + 5;
+
+if (variable) { 
+   instruction;
+}

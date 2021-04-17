@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef LEXER_H
 #include "lexer.h"
-#endif
-#include "defs.h"
 
 int ram_lexer(FILE* file_desc)
 {
@@ -21,7 +18,6 @@ int ram_lexer(FILE* file_desc)
 
 		if(is_opr(ch))
 		{
-			printf("Operator: %c\n", ch);
 			token = malloc(sizeof(TOKEN));
 			token->type = OPR;
 			token->value.is_char = ch;
@@ -37,9 +33,11 @@ int ram_lexer(FILE* file_desc)
 				ch = fgetc(file_desc);
 			}
 			while (is_idn(ch));
+			printf("_%s\n", lexer_buff);
 			token = malloc(sizeof(TOKEN));
 			token->type = IDN;
-			token->value.is_str = lexer_buff;
+			token->value.is_str = calloc(strlen(lexer_buff)+1, sizeof(char));
+			strcpy(token->value.is_str, lexer_buff);
 			tokens_push(tokens,token);
 			free(lexer_buff);
 		}
@@ -50,20 +48,50 @@ int ram_lexer(FILE* file_desc)
 			while((ch = fgetc(file_desc)) != EOF && !is_str(ch))
 			{
 				strncat(lexer_buff, &ch, 1);
-				//TOKEN.value.is_str
 			}
+			printf("_%s\n", lexer_buff);
 			token = malloc(sizeof(TOKEN));
 			token->type = STR;
-			token->value.is_str = lexer_buff;
+			token->value.is_str = calloc(strlen(lexer_buff)+1, sizeof(char));
+			strcpy(token->value.is_str, lexer_buff);
 			tokens_push(tokens,token);
 			free(lexer_buff);
+		}
+		else switch(ch)
+		{
+			case '{':
+				token = malloc(sizeof(TOKEN));
+				token->type = LCB;
+				tokens_push(tokens,token);
+				break;
+			case '}':
+				token = malloc(sizeof(TOKEN));
+				token->type = RCB;
+				tokens_push(tokens,token);
+				break;
+			case '(':
+				token = malloc(sizeof(TOKEN));
+				token->type = LPR;
+				tokens_push(tokens,token);
+				break;
+			case ')':
+				token = malloc(sizeof(TOKEN));
+				token->type = RPR;
+				tokens_push(tokens,token);
+				break;
+			case ';':
+				printf("_;\n");
+				token = malloc(sizeof(TOKEN));
+				token->type = SCN;
+				tokens_push(tokens,token);
+				break;
 		}
         }
 	while (ch != EOF);
 
 	tokens_print(tokens);
 	tokens_free(tokens);
-	printf("END count______ %i\n",tokens_count(tokens));
+	printf("END count: %i\n",tokens_count(tokens));
 
 	return 0;
 }
@@ -105,30 +133,38 @@ int tokens_push(TOKEN** tokens, TOKEN* token)
 {
 	int c = tokens_count(tokens);
 	TOKEN* p_tmp = (void*)0;
-	printf("count token %i\n",c);
 	if((p_tmp = realloc(*tokens, sizeof(TOKEN*)*( c ? c + 2 : 2 ))) == NULL) return -1;
-	printf("after token %i\n",c ? c + 2 : 2);
 	*tokens = p_tmp;
-	printf("push token %i push null: %i\n",c,c+1);
-	tokens[c] = token;
-	tokens[c+1] = malloc(sizeof(TOKEN*));
-	tokens[c+1] = (void*)0;
+	*(tokens+c) = token;
+	*(tokens+c+1) = malloc(sizeof(TOKEN*));
+	*(tokens+c+1) = (void*)0;
 	return c;
 }
 
 void tokens_print(TOKEN** tokens)
 {
 	int c = 0;
+	const char* token_types_list[] = { "STR", "LPR", "RPR", "IDN", "OPR", "LCB", "RCB", "SCN" };
 	while(*(c+tokens) != (void*)0)
 	{
 		switch(tokens[c]->type)
 		{
 			case OPR:
-				printf("Token: Type: %i Value: %c\n",tokens[c]->type,tokens[c]->value.is_char);
+				printf("Token: Type: %s Value: %c\n", token_types_list[tokens[c]->type], tokens[c]->value.is_char);
+				break;
 			case STR:
-				printf("Token: Type: %i Value: %s\n",tokens[c]->type,tokens[c]->value.is_str);
+				printf("Token: Type: %s Value: %s\n", token_types_list[tokens[c]->type], tokens[c]->value.is_str);
+				break;
 			case IDN:
-				printf("Token: Type: %i Value: %s\n",tokens[c]->type,tokens[c]->value.is_str);
+				printf("Token: Type: %s Value: %s\n", token_types_list[tokens[c]->type], tokens[c]->value.is_str);
+				break;
+			case SCN:
+			case LPR:
+			case RPR:
+			case RCB:
+			case LCB:
+				printf("Token: Type: %s\n", token_types_list[tokens[c]->type]);
+				break;
 		}
 		c++;
 	}

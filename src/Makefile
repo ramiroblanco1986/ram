@@ -7,7 +7,7 @@ DATABASE=db.bin
 all: default 
 
 default: clean lexer.o
-	$(CC) $(CFLAGS) -g -o ram ram.c lexer.o 
+	$(CC) $(CFLAGS) -g -o ram lexer.o ram.c 
 
 lexer.o: 
 	$(CC) $(CFLAGS) -c lexer.c
