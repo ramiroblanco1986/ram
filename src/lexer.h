@@ -1,8 +1,6 @@
 #ifndef LEXER_H
 
-#define LEXER_H
-
-#endif
+#define LEXER_H 
 
 typedef enum
 {
@@ -11,8 +9,13 @@ typedef enum
 	LPR,
 	RPR,
 	IDN,
-	OPR
+	OPR,
+	LCB,
+	RCB,
+	SCN
 } TOKEN_TYPE;
+
+const char* token_types_list[] = { "STR", "EQL", "LPR", "RPR", "IDN", "OPR", "LCB", "RCB", "SCN" };
 
 typedef struct
 {
@@ -35,3 +38,9 @@ int is_idn(char ch);
 int is_str(char ch);
 int is_opr(char ch);
 
+int tokens_count(TOKEN** tokens);
+int tokens_push(TOKEN** tokens, TOKEN* token);
+void tokens_print(TOKEN** tokens);
+void tokens_free(TOKEN** tokens);
+
+#endif

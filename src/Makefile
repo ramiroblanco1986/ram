@@ -6,8 +6,8 @@ DATABASE=db.bin
 
 all: default 
 
-default: lexer.o
-	$(CC) $(CFLAGS) -o ram ram.c lexer.o 
+default: clean lexer.o
+	$(CC) $(CFLAGS) -g -o ram ram.c lexer.o 
 
 lexer.o: 
 	$(CC) $(CFLAGS) -c lexer.c
