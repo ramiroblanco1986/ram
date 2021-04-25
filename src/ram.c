@@ -8,7 +8,7 @@ int main()
 
 	FILE* file_desc;
 
-	file_desc = fopen("script1.ram", "r");
+	file_desc = fopen("script3.ram", "r");
 
 	if(file_desc == NULL)
 	{
