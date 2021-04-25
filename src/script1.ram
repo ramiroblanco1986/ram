@@ -1,8 +1,8 @@
-variable1 = "Hola script!";
+variable1 < "Hola script!";
 
 variable2 = "Segunda string.";
 
-variable3 = 4 + 5 * 3;
+variable3 = 4 + 5 * 9;
 
 variable4 = "este es otro stringgggggg....\n";
 

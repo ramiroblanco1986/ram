@@ -2,6 +2,8 @@
 
 #define _LEXER_H_
 
+#define ARR_START_SIZE 10
+#define ARR_GF 5 
 #define MAX_IDN_LEN 100
 #define MAX_STR_LEN 5000
 #define DEF_OPERATORS "<>!+-*/%="
@@ -40,10 +42,9 @@ int is_idn(char ch);
 int is_str(char ch);
 int is_opr(char ch);
 
-int tokens_count(TOKEN** tokens);
-int tokens_push(TOKEN** tokens, TOKEN* token);
-void tokens_print(TOKEN** tokens);
-void tokens_free(TOKEN** tokens);
+TOKEN** tokens_push(TOKEN** tokens, TOKEN* token, int* tokens_count, int* array_size);
+void tokens_print(TOKEN** tokens, int tokens_count);
+void tokens_free(TOKEN** tokens, int tokens_count);
 
 #endif //_LEXER_H_
 

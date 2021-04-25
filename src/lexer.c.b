@@ -9,10 +9,9 @@ int ram_lexer(FILE* file_desc)
 	char* lexer_buff;
 
 	int tokens_count = 0;
-	int array_size = ARR_START_SIZE;
-
 	TOKEN* token = (void*)0;
-	TOKEN** tokens = malloc(sizeof(TOKEN*) * array_size);
+	TOKEN** tokens = malloc(sizeof(TOKEN*));
+	//*tokens = (void*)0;
 
 	do
         {
@@ -20,26 +19,34 @@ int ram_lexer(FILE* file_desc)
 
 		if(is_opr(ch))
 		{
-			//printf("es ope: %c\n",ch);
-			token = (TOKEN*) malloc(sizeof(TOKEN));
+			printf("es ope: %c\n",ch);
+			token = malloc(sizeof(TOKEN));
 			token->type = OPR;
 			token->value.is_char = ch;
+			if(!tokens_push(tokens,token,&tokens_count))
+			{
+				perror("Error push!\n");
+				exit(1);
+			}
+			continue;
 		}
-		else if(is_str(ch))
+		/*else if(is_str(ch))
 		{
-			token = (TOKEN*) malloc(sizeof(TOKEN));
 			lexer_buff = malloc(sizeof(char)*MAX_STR_LEN);
 			lexer_buff[0] = '\0';
 			while((ch = fgetc(file_desc)) != EOF && !is_str(ch))
 			{
 				strncat(lexer_buff, &ch, 1);
 			}
+			token = malloc(sizeof(TOKEN));
 			token->type = STR;
 			token->value.is_str = calloc(strlen(lexer_buff)+1, sizeof(char));
 			strcpy(token->value.is_str, lexer_buff);
+			tokens_push(tokens,token,&tokens_count);
 			free(lexer_buff);
-		}
-		else if(is_idn(ch))
+			continue;
+		}*/
+		/*else if(is_idn(ch))
 		{
 			lexer_buff = malloc(sizeof(char)*MAX_IDN_LEN);
 			lexer_buff[0] = '\0';
@@ -49,55 +56,55 @@ int ram_lexer(FILE* file_desc)
 				ch = fgetc(file_desc);
 			}
 			while (is_idn(ch));
-			ungetc (ch, file_desc);
-			token = (TOKEN*) malloc(sizeof(TOKEN));
+			token = malloc(sizeof(TOKEN));
 			token->type = IDN;
 			token->value.is_str = calloc(strlen(lexer_buff)+1, sizeof(char));
+			printf("i_%s\n", lexer_buff);
 			strcpy(token->value.is_str, lexer_buff);
+			tokens_push(tokens,token,&tokens_count);
 			free(lexer_buff);
 		}
-		else switch(ch)
+		switch(ch)
 		{
 			case '{':
 				token = malloc(sizeof(TOKEN));
 				token->type = LCB;
+				tokens_push(tokens,token,&tokens_count);
 				break;
 			case '}':
 				token = malloc(sizeof(TOKEN));
 				token->type = RCB;
+				tokens_push(tokens,token,&tokens_count);
 				break;
 			case '(':
+				printf("__________________________%c\n",ch);
 				token = malloc(sizeof(TOKEN));
 				token->type = LPR;
+				tokens_push(tokens,token,&tokens_count);
 				break;
 			case ')':
 				token = malloc(sizeof(TOKEN));
 				token->type = RPR;
+				tokens_push(tokens,token,&tokens_count);
 				break;
 			case ';':
 				token = malloc(sizeof(TOKEN));
 				token->type = SCN;
+				token->value.is_str = malloc(sizeof(char));
+				token->value.is_str = '\0';
+				tokens_push(tokens,token,&tokens_count);
 				break;
-		}
+		}*/
 		
-		if(token)
-		{
-			tokens = tokens_push(tokens,token,&tokens_count,&array_size);
-			if(!tokens)
-			{
-				perror("Error push!\n");
-				exit(1);
-			}
-			token = (void*)0;
-		}
+		printf("_%c\n",ch);
         }
 	while (ch != EOF);
 
+	//tokens_free(tokens, tokens_count);
+	//free(tokens);
 	tokens_print(tokens, tokens_count);
 	printf("END count: %i\n",tokens_count);
 
-	tokens_free(tokens, tokens_count);
-	free(tokens);
 	return 0;
 }
 
@@ -127,23 +134,21 @@ int is_opr(char ch)
 	return 0;
 }
 
-TOKEN** tokens_push(TOKEN** tokens, TOKEN* token, int* tokens_count, int* array_size)
+int tokens_push(TOKEN** tokens, TOKEN* token, int* tokens_count)
 {
-
 	TOKEN* p_tmp;
-
-	if(*array_size == *tokens_count)
+	printf("_______%li\n", sizeof(TOKEN*)* ((*tokens_count)+1));
+	if(!*tokens_count) tokens[*tokens_count] = token;
+	else
 	{
-		*array_size = *array_size + ARR_GF;
-		if((p_tmp = realloc(tokens, sizeof(TOKEN*)* *array_size)) == NULL) return 0;
+		printf("XXxXXXSxsxSXSxSXS %i %li\n", *tokens_count, sizeof(TOKEN*)* ((*tokens_count)+1));
+		if((p_tmp = realloc(tokens, sizeof(TOKEN*)* ((*tokens_count)+1) )) == NULL) return 0;
 		tokens = (TOKEN**)p_tmp;
+		tokens[*tokens_count] = token;
 	}
-
-	tokens[*tokens_count] = token;
-
+	printf(")))))))))))) %i %i %li %p\n", *tokens_count, *tokens_count,sizeof(TOKEN*),tokens[*tokens_count]);
 	(*tokens_count)++;
-
-	return tokens;
+	return 1;
 }
 
 void tokens_print(TOKEN** tokens, int tokens_count)
@@ -175,9 +180,6 @@ void tokens_print(TOKEN** tokens, int tokens_count)
 
 void tokens_free(TOKEN** tokens, int tokens_count)
 {
-	while(--tokens_count >= 0)
-	{
-		if(tokens[tokens_count]->type == STR || tokens[tokens_count]->type == IDN) free(tokens[tokens_count]->value.is_str);
-		free(*(tokens+tokens_count));
-	}
+	do free(*(tokens+tokens_count));
+	while(--tokens_count >= 0);
 }
