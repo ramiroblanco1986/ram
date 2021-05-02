@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "lexer.h"
+#include "parser.h"
 
 int main()
 {
@@ -8,7 +10,7 @@ int main()
 
 	FILE* file_desc;
 
-	file_desc = fopen("script3.ram", "r");
+	file_desc = fopen("examples/script4.ram", "r");
 
 	if(file_desc == NULL)
 	{
@@ -16,7 +18,18 @@ int main()
 		return 1;
 	}
 
-	ram_lexer(file_desc);
+	int tokens_count = 0;
+
+	TOKEN** tokens = ram_lexer(file_desc, &tokens_count);
+
+        //tokens_print(tokens, tokens_count);
+        printf("END count: %i\n",tokens_count);
+
+	parse(tokens, tokens_count);
+
+        tokens_free(tokens, tokens_count);
+        free(tokens);
+
 
 	if(fclose(file_desc) < 0) 
 	{

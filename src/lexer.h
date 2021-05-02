@@ -36,7 +36,7 @@ typedef struct
 } TOKEN;
 
 
-int ram_lexer(FILE* file_desc);
+TOKEN** ram_lexer(FILE* file_desc, int* tokens_count);
 
 int is_idn(char ch);
 int is_str(char ch);

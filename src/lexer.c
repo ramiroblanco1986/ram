@@ -3,12 +3,11 @@
 #include <string.h>
 #include "lexer.h"
 
-int ram_lexer(FILE* file_desc)
+TOKEN** ram_lexer(FILE* file_desc, int* tokens_count)
 {
 	char ch;
 	char* lexer_buff;
 
-	int tokens_count = 0;
 	int array_size = ARR_START_SIZE;
 
 	TOKEN* token = (void*)0;
@@ -82,7 +81,7 @@ int ram_lexer(FILE* file_desc)
 		
 		if(token)
 		{
-			tokens = tokens_push(tokens,token,&tokens_count,&array_size);
+			tokens = tokens_push(tokens,token,tokens_count,&array_size);
 			if(!tokens)
 			{
 				perror("Error push!\n");
@@ -93,12 +92,7 @@ int ram_lexer(FILE* file_desc)
         }
 	while (ch != EOF);
 
-	tokens_print(tokens, tokens_count);
-	printf("END count: %i\n",tokens_count);
-
-	tokens_free(tokens, tokens_count);
-	free(tokens);
-	return 0;
+	return tokens;
 }
 
 int is_idn(char ch)
