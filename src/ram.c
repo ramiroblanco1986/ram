@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include "lexer.h"
 #include "parser.h"
 
 int main()
 {
 
-	printf("RAM 1.0\n");
+	openlog("ram", LOG_PID, LOG_USER);
+
+	syslog(LOG_INFO, "RAM 1.0 Starting...");
 
 	FILE* file_desc;
 
@@ -14,7 +17,7 @@ int main()
 
 	if(file_desc == NULL)
 	{
-		printf("Error 1.\n");
+		syslog(LOG_ERR, "Error opening script!");
 		return 1;
 	}
 
@@ -33,9 +36,11 @@ int main()
 
 	if(fclose(file_desc) < 0) 
 	{
-		printf("Error 2.\n");
+		syslog(LOG_ERR, "Error closing script!");
 		return 1;
 	} 
+
+	closelog();
 
 	return 0;
 }
