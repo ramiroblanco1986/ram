@@ -8,17 +8,20 @@
 #include <sys/epoll.h> // for epoll_create1(), epoll_ctl(), struct epoll_event
 #include <fcntl.h>
 #include "httpd.h"
+#include "request.h"
 
 
 int main()
 {
 
+	int i;
 	char message[] = "HTTP/1.0 200 OK\r\n\r\n<h1>OK Response</h1>";
-	char buffer[256];
-	char header[MAX_HEADER_SIZE];
-	int header_c = 0;
+	char buffer[BUFFER];
+	char request[MAX_REQUEST_SIZE];
 	int live = 1;
 	int option = 1;
+	int recv_c = 0;
+	int recv_c_tot = 0;
 	int socket_fd, accept_fd, bind_listen_aux = 0;
 	struct sockaddr_in serv_addr, clnt_addr;
 	unsigned int sockaddr_in_size = sizeof(struct sockaddr_in);
@@ -93,12 +96,29 @@ int main()
 		//	}
 		//	else
 		//	{
-				while( (header_c=read(accept_fd, buffer, 256)) > 0)
+				//GET REQUEST
+				recv_c_tot = 0;
+				memset(buffer, 0, BUFFER);
+				memset(request, 0, MAX_REQUEST_SIZE);
+				while((recv_c=recv(accept_fd, buffer, BUFFER, 0)) > 0)
 				{
-					printf("%s",buffer);
-					if(buffer[--header_c] == '\n') break;
+					for(i=0;i<recv_c;i++)
+					{	
+						request[recv_c_tot] = buffer[i];
+						recv_c_tot++;
+					}
+					if(recv_c_tot > 5) if(request[recv_c_tot-1] == LF 
+							&& request[recv_c_tot-2] == CR
+							&& request[recv_c_tot-3] == LF
+							&& request[recv_c_tot-4] == CR
+							) break;
 				}
-				if (write (accept_fd, message , sizeof(message)) == -1)
+				request[recv_c_tot] = '\0';
+
+				process_request(request, recv_c_tot);
+
+				write (accept_fd, message , sizeof(message));
+				if (write (accept_fd, request, recv_c_tot) == -1)
 				{
 					perror("Error escribiendo mensaje en socket");
 					exit (1);
