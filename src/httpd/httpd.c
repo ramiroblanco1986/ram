@@ -25,6 +25,7 @@ int main()
 	int socket_fd, accept_fd, bind_listen_aux = 0;
 	struct sockaddr_in serv_addr, clnt_addr;
 	unsigned int sockaddr_in_size = sizeof(struct sockaddr_in);
+	HEADER headers[MAX_HEADERS];
 
 	//struct epoll_event epoll_event, events[MAX_EVENTS];
 	//int epoll_fd = epoll_create1(0);
