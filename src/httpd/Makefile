@@ -1,14 +1,17 @@
 CC=gcc
 CFLAGS=-Wall
+CSSLFLAGS=-lssl -lcrypto
 PATHLIB=lib
 
 all: default 
 
-default: clean request.o
-	$(CC) $(CFLAGS) -o httpd request.o httpd.c 
+default: clean base64.o request.o
+	$(CC) $(CFLAGS) $(CSSLFLAGS) -o httpd base64.o request.o httpd.c 
 
 request.o: 
-	$(CC) $(CFLAGS) -c request.c
+	$(CC) $(CFLAGS) $(CSSLFLAGS) -c request.c
 
+base64.o: 
+	$(CC) $(CFLAGS) $(CSSLFLAGS) -c base64.c
 clean:
-	rm -f request.o httpd
+	rm -f base64.o request.o httpd

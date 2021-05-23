@@ -7,12 +7,15 @@
 #define BACKLOG 10
 #define MAX_EVENTS 2 
 
-#define MAX_HEADER_SIZE 8000000 // 8K 
-
 #define MAX_HEADERS 80 // 80headers 
+
+#define MAX_HEADER_NAME_SIZE 2000
+#define MAX_HEADER_VALUE_SIZE 6000
 
 #define LF 10
 #define CR 13
+#define SP 32
+#define SC 58
 
 typedef struct
 {
