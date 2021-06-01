@@ -7,13 +7,12 @@
 #include "base64.h"
 
 
-char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** headers)
+int process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** headers, int* headers_c)
 {
-	unsigned char hash[SHA_DIGEST_LENGTH];
-	unsigned char hash_ori[100];
-	unsigned char wsuuid[] = WSUUID;
-	int ch = 0, aux_c = 0, aux_h = 0, headers_c = 0;
-	request->method = 0;
+	//unsigned char hash[SHA_DIGEST_LENGTH];
+	//unsigned char hash_ori[100];
+	//unsigned char wsuuid[] = WSUUID;
+	int ch = 0, aux_c = 0, aux_h = 0;
 
 	/* The Request-Line begins with a method token, followed by the
 	   Request-URI and the protocol version, and ending with CRLF. The
@@ -22,12 +21,20 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 	   Method SP Request-URI SP HTTP-Version CRLF */
 
 	//Method
-	while(raw_req[ch] != SP) request->method += (int)raw_req[ch++];
+	request->method_charsum = 0;
+	while(raw_req[ch] != SP && aux_c < METHOD_SIZE)
+	{
+		request->method_charsum += (int) raw_req[ch];
+		request->method[aux_c++] = raw_req[ch++];
+	}
+	request->method[aux_c] = '\0';
 
 	ch++; //skip SP
 
 	//Uri
-	while(raw_req[ch] != SP) request->uri[aux_c++] = raw_req[ch++];
+	aux_c = 0;
+	while(raw_req[ch] != SP && aux_c < URI_SIZE) request->uri[aux_c++] = raw_req[ch++];
+	request->uri[aux_c] = '\0';
 
 	request->uri[ch] = '\0';
 
@@ -35,15 +42,12 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 
 	//HTTP Version
 	aux_c = 0;
-	while(raw_req[ch] != CR) request->httpv[aux_c++] = raw_req[ch++];
+	while(raw_req[ch] != CR && aux_c < HTTPV_SIZE) request->httpv[aux_c++] = raw_req[ch++];
+	request->httpv[aux_c] = '\0';
 
 	request->httpv[ch] = '\0';
 
 	if(raw_req[++ch] != LF) return -1; //TODO
-
-	printf("METHOD(%i)\n",request->method);
-	printf("URI(%s)\n",request->uri);
-	printf("HTTPV(%s)\n",request->httpv);
 
 	ch++; //skip LF
 
@@ -51,16 +55,17 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 	/* Header fields are colon-separated key-value pairs in clear-text string format,
 	   terminated by a carriage return (CR) and line feed (LF) character sequence. */
 
+	aux_h = 0;
 	while(1)
 	{
-		headers[headers_c] = (HEADER*) malloc(sizeof(HEADER));
-		headers[headers_c]->name = (char*) malloc(sizeof(char)*MAX_HEADER_NAME_SIZE);
-		headers[headers_c]->value = (char*) malloc(sizeof(char)*MAX_HEADER_VALUE_SIZE);
+		headers[aux_h] = (HEADER*) malloc(sizeof(HEADER));
+		headers[aux_h]->name = (char*) malloc(sizeof(char)*MAX_HEADER_NAME_SIZE);
+		headers[aux_h]->value = (char*) malloc(sizeof(char)*MAX_HEADER_VALUE_SIZE);
 		//Header Name
 		aux_c = 0;
-		while(raw_req[ch] != SC && aux_c < MAX_HEADER_NAME_SIZE) headers[headers_c]->name[aux_c++] = raw_req[ch++];
-		headers[headers_c]->name[aux_c] = '\0';
-		ch++; //skip SC
+		while(raw_req[ch] != SC && aux_c < MAX_HEADER_NAME_SIZE) headers[aux_h]->name[aux_c++] = raw_req[ch++];
+		headers[aux_h]->name[aux_c] = '\0';
+		ch++; /* skip SC */
 		aux_c = 0;
 		while(raw_req[ch] != CR)
 		{
@@ -69,52 +74,53 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 				ch++;
 				continue;
 			}
-			headers[headers_c]->value[aux_c++] = raw_req[ch++];
+			headers[aux_h]->value[aux_c++] = raw_req[ch++];
 		}
 		if(raw_req[++ch] != LF) return -1; //TODO
-		headers[headers_c]->value[aux_c] = '\0';
-		headers_c++;
+		headers[aux_h]->value[aux_c] = '\0';
+		aux_h++;
 		if(raw_req[ch+1] == CR && raw_req[ch+2] == LF) break;
-		ch++; //skip LF
+		ch++; /* skip LF */
 	}
 
-	printf("HEADERS_C: %i\n", headers_c);
-	headers_c--;
-	for(;headers_c>0;headers_c--)
+	*headers_c = aux_h; /* store headers count */
+
+	aux_h--;
+	for(;aux_h>0;aux_h--)
 	{
 		aux_c=0;
-		//aux_h=0;
 		//ToLower
-		while(headers[headers_c]->name[aux_c] != '\0') { 
-			if( headers[headers_c]->name[aux_c] < 91 && headers[headers_c]->name[aux_c] > 64) headers[headers_c]->name[aux_c] += 32;
-			//printf("_%i_%c_", (int)headers[headers_c]->name[aux_c], headers[headers_c]->name[aux_c]);
-			//aux_h+=(int)headers[headers_c]->name[aux_c];
+		while(headers[aux_h]->name[aux_c] != '\0') { 
+			if( headers[aux_h]->name[aux_c] < 91 && headers[aux_h]->name[aux_c] > 64) headers[aux_h]->name[aux_c] += 32;
 			aux_c++;
 		}
-		if(aux_c == 17)
-		if(headers[headers_c]->name[0] == 115 &&
-				headers[headers_c]->name[1] == 101 &&
-				headers[headers_c]->name[2] == 99 &&
-				headers[headers_c]->name[3] == 45 &&
-				headers[headers_c]->name[4] == 119 &&
-				headers[headers_c]->name[5] == 101 &&
-				headers[headers_c]->name[6] == 98 &&
-				headers[headers_c]->name[7] == 115 &&
-				headers[headers_c]->name[8] == 111 &&
-				headers[headers_c]->name[9] == 99 &&
-				headers[headers_c]->name[10] == 107 &&
-				headers[headers_c]->name[11] == 101 &&
-				headers[headers_c]->name[12] == 116 &&
-				headers[headers_c]->name[13] == 45 &&
-				headers[headers_c]->name[14] == 107 &&
-				headers[headers_c]->name[15] == 101 &&
-				headers[headers_c]->name[16] ==  121)
+		
+
+
+		/*if(aux_c == 17)
+		if(headers[aux_h]->name[0] == 115 &&
+				headers[aux_h]->name[1] == 101 &&
+				headers[aux_h]->name[2] == 99 &&
+				headers[aux_h]->name[3] == 45 &&
+				headers[aux_h]->name[4] == 119 &&
+				headers[aux_h]->name[5] == 101 &&
+				headers[aux_h]->name[6] == 98 &&
+				headers[aux_h]->name[7] == 115 &&
+				headers[aux_h]->name[8] == 111 &&
+				headers[aux_h]->name[9] == 99 &&
+				headers[aux_h]->name[10] == 107 &&
+				headers[aux_h]->name[11] == 101 &&
+				headers[aux_h]->name[12] == 116 &&
+				headers[aux_h]->name[13] == 45 &&
+				headers[aux_h]->name[14] == 107 &&
+				headers[aux_h]->name[15] == 101 &&
+				headers[aux_h]->name[16] ==  121)
 		{
-			printf("%s: %s\n", headers[headers_c]->name, headers[headers_c]->value);
+			printf("%s: %s\n", headers[aux_h]->name, headers[aux_h]->value);
 			aux_c = 0;
-			while(headers[headers_c]->value[aux_c] != '\0')
+			while(headers[aux_h]->value[aux_c] != '\0')
 			{
-				hash_ori[aux_c] = headers[headers_c]->value[aux_c];
+				hash_ori[aux_c] = headers[aux_h]->value[aux_c];
 				aux_c++;
 			}
 			aux_h = 0;
@@ -126,7 +132,7 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 			}
 			hash_ori[aux_c] = '\0';
 
-			//for(aux_c=0;headers[headers_c]->value[aux_c] != '\0';aux_c++) hash_ori[aux_c] = headers[headers_c]->value[aux_c];
+			//for(aux_c=0;headers[aux_h]->value[aux_c] != '\0';aux_c++) hash_ori[aux_c] = headers[aux_h]->value[aux_c];
 
 			printf(">>>>>>>>> %s\n",hash_ori);
 			//printf("%s\n",SHA1(hash_ori, strlen(hash_ori), hash));
@@ -134,8 +140,10 @@ char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** 
 			//printf("%s\n", hash);
 			//printf("%s\n",b64_encode(hash, sizeof(hash)));
 		}
-		//printf("%s(%i) => ",headers[headers_c]->name, aux_h);
+		//printf("%s(%i) => ",headers[aux_h]->name, aux_h);
+		*/
 
 	}
-	return b64_encode(hash, strlen(hash));
+	//return b64_encode(hash, strlen(hash));
+	return 1;
 }

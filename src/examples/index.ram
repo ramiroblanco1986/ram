@@ -1,0 +1,51 @@
+require '_include_db.php';
+require '_include_redis.php';
+require '_include_forms.php';
+require '_include_regex.php';
+require '_include_utils.php';
+require '_include_mongo.php';
+
+$form_arr = array();
+$results_values = array();
+
+//Logica
+//Con login
+if(live_session()) {
+
+        $user_id = _check_redis_session(@$_COOKIE['_sess_portal']);
+        $results = _Mysql("SELECT usuario_rol FROM chatV2_usuarios WHERE usuario_id = ?", "s", array($user_id));
+        if($results) $user_type = $results[0]['usuario_rol'];
+
+        switch($user_type) {
+                case 1:
+                        switch(@$_GET['dst']) {
+                                case "":
+                                        require('../logic/admin/default.php');
+                                        break;
+                                case (preg_match('/^user_/', @$_GET['dst']) ? true : false) :
+                                        require('../logic/users.php');
+                                        break;
+                                case (preg_match('/^reportes_/', @$_GET['dst']) ? true : false) :
+                                        require('../logic/reportes.php');
+                                        break;
+                                case (preg_match('/^respuestas_/', @$_GET['dst']) ? true : false) :
+                                        require('../logic/respuestas.php');
+                                        break;
+                                case (preg_match('/logs_/', @$_GET['dst']) ? true : false) :
+                                        require('../logic/logs.php');
+                                        break;
+                                case (preg_match('/historial_/', @$_GET['dst']) ? true : false) :
+                                        require('../logic/historial.php');
+
+
+//PPS
+usleep(800);
+
+//LOGS
+if(@$_GET['dst'] != 'dashboard_admin44_beat')
+_Mysql("INSERT INTO chatV2_logs VALUES(0,NOW(),?,?,?,?)", "ssss", array(json_encode($arr),@$_COOKIE['_sess_portal'],@$_GET['dst'] == '' ? 'home' : @$_GET['dst'],_check_redis_session(@$_COOKIE['_sess_portal'])));
+
+echo json_encode($arr);
+
+?>
+

@@ -5,7 +5,9 @@
 #define BUFFER 4
 
 #define BACKLOG 10
-#define MAX_EVENTS 2 
+#define MAX_EVENTS 20 
+#define MAX_THREADS 5 
+#define MAX_WS_THREADS 5 
 
 #define MAX_HEADERS 80 // 80headers 
 
@@ -17,12 +19,22 @@
 #define SP 32
 #define SC 58
 
+#define CSUM_GET 224
+#define CSUM_POST 326
+#define CSUM_HEAD 274
+#define CSUM_PUT 249
+#define CSUM_DELETE 435
+#define CSUM_CONNECT 522
+#define CSUM_TRACE 367
+#define CSUM_PATCH 368
+
 typedef struct
 {
 	char* name;
 	char* value;
 } HEADER;
 
+void free_headers(HEADER** headers, int headers_c);
 
 #endif //_HTTPD_H_
 

@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include "websocket.h"
 
-int read_websocket(int accept_fd)
+void* read_websocket(int accept_fd)
 {
 	int i;
 	int recv_c = 0;
-	char buffer[BUFFER];
+	char buffer[WSBUFFER];
 	unsigned int bit_curr;
 	unsigned int pay_length;
 	unsigned char MASK[4];
@@ -17,12 +17,12 @@ int read_websocket(int accept_fd)
 	unsigned int OPCODE;
 	unsigned int max;
 
-	memset(buffer, 0, BUFFER);
+	memset(buffer, 0, WSBUFFER);
 	while(recv_c=recv(accept_fd, &bit_curr, 1, 0))
 	{
 
 		max = 1<<(1*CHAR_BIT-1);
-		printf("\n");
+		printf("ws\n");
 		for(i=1;i<=1*CHAR_BIT;i++)
 		{
 			printf("%i", (bit_curr&max ? 1 : 0));
@@ -58,7 +58,7 @@ int read_websocket(int accept_fd)
 						if(i % 8 == 0) printf(" ");
 						max >>= 1;
 					}
-					memset(buffer, 0, BUFFER);
+					memset(buffer, 0, WSBUFFER);
 					recv_c=recv(accept_fd, &buffer, pay_length, 0);
 					printf("\n>");
 					for (i = 0; i < pay_length; i++)
@@ -70,8 +70,8 @@ int read_websocket(int accept_fd)
 				}
 				break; //OPC_TEXT 
 		}
-		while(1)
-		{
+		//while(1)
+		//{
 			i = 129;
 			write (accept_fd, &i, 1);
 			i = 4;
@@ -84,7 +84,7 @@ int read_websocket(int accept_fd)
 			write (accept_fd, &i, 1);
 			i = 97;
 			write (accept_fd, &i, 1);
-			sleep(1);
-		}
+			//sleep(1);
+		//}
 	}
 }

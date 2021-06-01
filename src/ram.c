@@ -13,7 +13,7 @@ int main()
 
 	FILE* file_desc;
 
-	file_desc = fopen("examples/script4.ram", "r");
+	file_desc = fopen("examples/script1.ram", "r");
 
 	if(file_desc == NULL)
 	{

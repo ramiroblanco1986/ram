@@ -2,7 +2,7 @@
 
 #define _WEBSOCKET_H_
 
-#define BUFFER 100
+#define WSBUFFER 100
 
 
 // Opcode Meaning Reference 
@@ -33,7 +33,7 @@ struct
 	unsigned int paylen : 7;
 } ws_frame_16;
 
-int read_websocket(int accept_fd);
+void* read_websocket(int accept_fd);
 
 #endif //_WEBSOCKET_H_
 

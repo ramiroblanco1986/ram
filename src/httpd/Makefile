@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall
-CSSLFLAGS=-lssl -lcrypto
+CSSLFLAGS=-lssl -lcrypto -lpthread
 PATHLIB=lib
 
 all: default 

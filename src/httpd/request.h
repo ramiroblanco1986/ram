@@ -15,12 +15,13 @@
 
 typedef struct
 {
-	int method;
+	int method_charsum;
+	char method[METHOD_SIZE];
         char uri[URI_SIZE];
         char httpv[HTTPV_SIZE];
 } REQUEST;
 
-char* process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** headers);
+int process_raw_req(char* raw_req, int recv_c_tot, REQUEST* request, HEADER** headers, int* headers_c);
 
 //HEADERS
 #define SECWEBSOCKETKEY "sec-websocket-key"
