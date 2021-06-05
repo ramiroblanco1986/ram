@@ -36,21 +36,19 @@ int main()
 	unsigned int sockaddr_in_size = sizeof(struct sockaddr_in);
 	REQUEST* request;
 	HEADER** headers;
-	//REQUEST* request = (REQUEST*) malloc(sizeof(REQUEST));
-	//HEADER** headers = (HEADER**) malloc(sizeof(HEADER)*MAX_HEADERS);
 	int headers_c;
 
 	printf("This system has %d processors configured and %d processors available.\n", get_nprocs_conf(), get_nprocs());
 
-	//struct epoll_event epoll_event, events[MAX_EVENTS];
-	//int epoll_fd = epoll_create1(0);
-	//int n,nfds;
+	struct epoll_event epoll_event, events[MAX_EVENTS];
+	int epoll_fd = epoll_create1(0);
+	int n,nfds;
 
-	//if(epoll_fd == -1)
-	//{
-	//	fprintf(stderr, "Failed to create epoll file descriptor\n");
-	//	return -1;
-	//}
+	if(epoll_fd == -1)
+	{
+		fprintf(stderr, "Failed to create epoll file descriptor\n");
+		return -1;
+	}
 
 	if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
 	{
@@ -75,53 +73,58 @@ int main()
 		fprintf(stderr, "Error en función listen. Código de error %s\n", strerror(bind_listen_aux));
 		return -1;
 	}
+	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 
-	/*epoll_event.events = EPOLLIN | EPOLLET;
+	//epoll_event.events = EPOLLIN | EPOLLET;
+	epoll_event.events = EPOLLIN;
 	epoll_event.data.fd = socket_fd;
+
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &epoll_event) == -1) {
 		perror("epoll_ctl: listen_sock");
 		exit(EXIT_FAILURE);
-	}*/
+	}
 
 	while(live)
 	{
-
-		/*nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+		/*detect new conns*/
+		//nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+		nfds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 		if (nfds == -1) {
 			perror("epoll_wait");
 			exit(EXIT_FAILURE);
 		}
 
+		printf("EVENTS: %i\n", nfds);
 		for (n = 0; n < nfds; ++n)
 		{
-			printf("DDDDDDDDD %i %i\n", n, events[n].data.fd);
 			if (events[n].data.fd == socket_fd)
 			{
 				printf("es socket_fd\n");
-		*/		if ((accept_fd[threads_c] = accept(socket_fd, (struct sockaddr *)&clnt_addr, &sockaddr_in_size)) == -1)
+				if ((epoll_event.data.fd = accept(socket_fd, (struct sockaddr *)&clnt_addr, &sockaddr_in_size)) == -1)
 				{
-					fprintf(stderr, "Error en función accept. Código de error %s\n", strerror(accept_fd[threads_c]));
+					fprintf(stderr, "Error en función accept. Código de error %s\n", strerror(epoll_event.data.fd));
 					return -1;
 				}
 				/* Change the socket into non-blocking state */
-				//fcntl(accept_fd, F_SETFL, O_NONBLOCK);
-				/*epoll_event.events = EPOLLIN | EPOLLET;
-				epoll_event.data.fd = accept_fd;
-				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, accept_fd, &epoll_event) == -1)
+				fcntl(epoll_event.data.fd, F_SETFL, O_NONBLOCK);
+				epoll_event.events = EPOLLIN; // | EPOLLET;
+				//epoll_event.data.fd = accept_fd[threads_c];
+				if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, epoll_event.data.fd, &epoll_event) == -1)
 				{
 					perror("epoll_ctl: accept_sock");
 					exit(1);
-				}*/
-			//}
-			//else
-			//{
-				//printf("es fd: %i\n", events[n].data.fd);
-				//GET REQUEST
+				}
+			}
+			else
+			{
+				printf("es un mensaje\n");
 				recv_c_tot = 0;
+				//close(events[n].data.fd);
+				//continue;
 				memset(response, 0, 200);
 				memset(buffer, 0, BUFFER);
 				memset(raw_req, 0, MAX_REQUEST_SIZE);
-				while((recv_c=recv(accept_fd[threads_c], buffer, BUFFER, 0)) > 0)
+				while((recv_c=recv(events[n].data.fd, buffer, BUFFER, 0)) > 0)
 				{
 					for(i=0;i<recv_c;i++)
 					{	
@@ -140,7 +143,7 @@ int main()
 				headers = (HEADER**) malloc(sizeof(HEADER)*MAX_HEADERS);
 				if(!process_raw_req(raw_req, recv_c_tot, request, headers, &headers_c))
 				{
-					fprintf(stderr, "Error en función accept. Código de error %s\n", strerror(accept_fd[threads_c]));
+					fprintf(stderr, "Error en función accept. Código de error %s\n", strerror(events[n].data.fd));
 					continue;
 				}
 
@@ -178,6 +181,8 @@ int main()
 
 						strcpy(response, "HTTP/1.1 200 OK\r\n\r\n<h1>GET REQUEST</h1>");
 						strcat(response, request->method);
+						strcat(response, " Uri: ");
+						strcat(response, request->uri);
 						break;
 					case CSUM_POST:
 						strcpy(response, "HTTP/1.1 200 OK\r\n\r\n<h1>GET POST</h1>");
@@ -192,11 +197,11 @@ int main()
 
 
 				/*end request*/
-				write (accept_fd[threads_c], response , strlen(response));
+				write (events[n].data.fd, response , strlen(response));
 				if(headers_c) free_headers(headers, headers_c);
 				free(headers); headers = NULL;
 				free(request); request = NULL;
-				close(accept_fd[threads_c]);
+				close(events[n].data.fd);
 				continue;
 
 				//strcpy(response, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Protocol: binary\r\nSec-WebSocket-Accept: ");
@@ -239,13 +244,13 @@ int main()
 				//printf("EXIT\n");
 				//close(accept_fd);
 		//	}
-		//}
+		}
 
 		//printf  ("Server:  conexión desde:  %s", inet_ntoa(clnt_addr.sin_addr));
 
 		//printf(". End.\n");
 		//sleep(1);
-	//}
+	}
 
 	//if(close(epoll_fd))
 	//{

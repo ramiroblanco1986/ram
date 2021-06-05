@@ -5,7 +5,7 @@
 #define BUFFER 4
 
 #define BACKLOG 10
-#define MAX_EVENTS 20 
+#define MAX_EVENTS  100
 #define MAX_THREADS 5 
 #define MAX_WS_THREADS 5 
 
